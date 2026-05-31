@@ -165,6 +165,7 @@ for filename in files:
                     # skip broken link but still increment index
                     log(f"Broken link with index {index.get()} was skipped!\n")
                     skipped.append(f"Song {index.get()} in playlist {pl_name}")
+                    success = True
                 else:
                     # get corresponding ytmusic object
                     ytdlp_command = f'yt-dlp --js-runtimes "{JS_RUNTIME}" --extract-audio --audio-format mp3 -o "{TARGET_DIR}/{pl_name}/{index.get()} - %(title)s.%(ext)s" "{song}"'
