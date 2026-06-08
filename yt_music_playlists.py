@@ -3,7 +3,7 @@ import re, sys, os, datetime, subprocess, time, shutil
 
 ## -- top-level paths
 BACKUP_LOCATION_PATH = "/media/luca/media/music/ytmusic-backups/"
-SCRIPT_PATH = "/home/luca/srv/ripping/ytmusic/"
+SCRIPT_PATH = "/home/luca/srv/ripping/ytmusic-playlist-script/"
 JS_RUNTIME = "deno:/home/luca/.deno/bin/deno"
 LINKS_FILE_NAME = "links.txt"
 
@@ -157,7 +157,7 @@ for filename in files:
 
                 if retries != 0:
                     log("Retry download after 10 seconds...")
-                    time.sleep(3)
+                    time.sleep(10)
                     log(f"Retrying now ({retries}/5):\n")
 
                 # check if the link is busted
@@ -168,7 +168,10 @@ for filename in files:
                     success = True
                 else:
                     # get corresponding ytmusic object
-                    ytdlp_command = f'yt-dlp --js-runtimes "{JS_RUNTIME}" --extract-audio --audio-format mp3 -o "{TARGET_DIR}/{pl_name}/{index.get()} - %(title)s.%(ext)s" "{song}"'
+                    # this command basically does the following:
+                    # 1. download audio-only in the best available quality
+                    # 2. convert download with ffmpeg to audio file with the best audio format and quality
+                    ytdlp_command = f'yt-dlp --js-runtimes "{JS_RUNTIME}" -f "ba" --extract-audio --audio-format best --audio-quality 0 -o "{TARGET_DIR}/{pl_name}/{index.get()} - %(title)s.%(ext)s" "{song}"'
                     result = ""
                     try:
                         result = subprocess.run(ytdlp_command, check=True, shell=True, capture_output=True)
@@ -183,8 +186,10 @@ for filename in files:
                             log("------------------------------------------")
                             log(f"Number of current errors: {len(errors)}.")
                             log(f"Number of skipped songs so far: {len(skipped)}")
-                    except:
+                    except Exception as e:
                         log("\nSOMETHING WENT WRONG WITH EXECUTING THE COMMAND!!!\n")
+                        print(e)
+                        print("")
                         if (retries==5):
                             errors.append(f"Song from playlist '{pl_name}' with index {index} has failed!")
                 
