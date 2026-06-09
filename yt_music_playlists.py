@@ -8,6 +8,7 @@ JS_RUNTIME = "deno:/home/luca/.deno/bin/deno"
 LINKS_FILE_NAME = "links.txt"
 
 TARGET_DIR = f"{BACKUP_LOCATION_PATH}backup-{datetime.datetime.now().date()}/"
+# TARGET_DIR = f"{BACKUP_LOCATION_PATH}unsorted/bomba/"
 LOG_OUTPUT_PATH = f"{TARGET_DIR}log.txt"
 
 ## functions & classes
@@ -79,6 +80,8 @@ except:
         sys.exit()
 
 
+time_start = datetime.datetime.now()
+
 
 ## extract song links
 # -------------------
@@ -121,8 +124,8 @@ with open(f"{BACKUP_LOCATION_PATH}{LINKS_FILE_NAME}", "r") as links: # parse lin
 try:
     log (f"\nExtraction finished with total number of {total_fails} failures...")
     for x in failed_songs:
-        log(f"  - Song '{x["song_name"]}' from playlist '{x["pl_name"]}' (https://music.youtube.com/watch?list={x["pl_id"]})")
-    log("\nManual intervention required!")
+        log(f"  - '{x["song_name"]}' from playlist '{x["pl_name"]}'  (https://music.youtube.com/watch?list={x["pl_id"]})")
+    log("\nManual intervention may be required!")
 except:
     log("\nCould not log relevant information...")
 
@@ -172,26 +175,30 @@ for filename in files:
                     # 1. download audio-only in the best available quality
                     # 2. convert download with ffmpeg to audio file with the best audio format and quality
                     ytdlp_command = f'yt-dlp --js-runtimes "{JS_RUNTIME}" -f "ba" --extract-audio --audio-format best --audio-quality 0 -o "{TARGET_DIR}/{pl_name}/{index.get()} - %(title)s.%(ext)s" "{song}"'
-                    result = ""
+                    output = ""
                     try:
                         result = subprocess.run(ytdlp_command, check=True, shell=True, capture_output=True)
                         output = result.stdout.decode("utf-8")
-                        log(output)
+                        # log(output) --> i dont want to print everything
                         if ("ERROR" in output):
                             if (retries==5):
                                 errors.append(f"Song from playlist '{pl_name}' with index {index} has failed!\nAdditional information: {output}")
                         else:
                             success = True
-                            log(f"Completed Download of song with index {index.get()}!")
+                            log(f"\nCompleted Download of song with index {index.get()}!")
+                            log(f"Saved to file {re.search("(?<=\[ExtractAudio\] Destination: ).+\.opus", output).group()}")
+                            log(f"Timestamp: {datetime.datetime.now()}")
                             log("------------------------------------------")
                             log(f"Number of current errors: {len(errors)}.")
                             log(f"Number of skipped songs so far: {len(skipped)}")
                     except Exception as e:
                         log("\nSOMETHING WENT WRONG WITH EXECUTING THE COMMAND!!!\n")
-                        print(e)
-                        print("")
+                        log(e)
+                        log("\nOutput:")
+                        log(output)
+                        log("")
                         if (retries==5):
-                            errors.append(f"Song from playlist '{pl_name}' with index {index} has failed!")
+                            errors.append(f"Song from playlist '{pl_name}' with index {index.get()} has failed! Link: {song}")
                 
                 retries += 1
 
@@ -207,9 +214,10 @@ log("The following songs were skipped:")
 for s in skipped:
     log(f" - {s}")
 
-log("\n\nThe following errors were encountered:")
+log("\n\nThe following errors were encountered:\n")
 for error in errors:
     log(error)
-    log("\n")
 
-log("\nFinished Backup!")
+log("\nFinished Backup successfully!")
+log(f"Time passed: {datetime.datetime.now() - time_start}")
+log("")

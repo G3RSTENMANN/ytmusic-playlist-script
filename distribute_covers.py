@@ -6,7 +6,7 @@ LINKS_FILE_NAME = "links.txt"
 
 COVERS_DIR = f"{BACKUP_LOCATION_PATH}covers/playlists/"
 LIBRARY_LOGO_PATH = f"{COVERS_DIR}../library.jpg"
-TARGET_DIR = f"{BACKUP_LOCATION_PATH}backup-2026-05-31/"
+TARGET_DIR = f"{BACKUP_LOCATION_PATH}backup-2026-06-09/"
 LOG_OUTPUT_PATH = f"{TARGET_DIR}log.txt"
 
 shutil.copyfile(LIBRARY_LOGO_PATH, TARGET_DIR + "cover.jpg")
