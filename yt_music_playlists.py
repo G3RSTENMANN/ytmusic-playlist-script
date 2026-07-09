@@ -3,6 +3,7 @@ import re, sys, os, datetime, subprocess, time, shutil
 
 ## -- top-level paths
 BACKUP_LOCATION_PATH = "/media/luca/media/music/ytmusic-backups/"
+#BACKUP_LOCATION_PATH = "/home/luca/srv/ripping/lehramt-gang/"
 SCRIPT_PATH = "/home/luca/srv/ripping/ytmusic-playlist-script/"
 JS_RUNTIME = "deno:/home/luca/.deno/bin/deno"
 LINKS_FILE_NAME = "links.txt"
@@ -174,7 +175,9 @@ for filename in files:
                     # this command basically does the following:
                     # 1. download audio-only in the best available quality
                     # 2. convert download with ffmpeg to audio file with the best audio format and quality
+                    
                     ytdlp_command = f'yt-dlp --js-runtimes "{JS_RUNTIME}" -f "ba" --extract-audio --audio-format best --audio-quality 0 -o "{TARGET_DIR}/{pl_name}/{index.get()} - %(title)s.%(ext)s" "{song}"'
+                    #ytdlp_command = f'yt-dlp --js-runtimes "{JS_RUNTIME}" -f "ba" --extract-audio --audio-format mp3 --audio-quality 0 -o "{TARGET_DIR}/{pl_name}/%(title)s.%(ext)s" "{song}"'
                     output = ""
                     try:
                         result = subprocess.run(ytdlp_command, check=True, shell=True, capture_output=True)
@@ -186,7 +189,7 @@ for filename in files:
                         else:
                             success = True
                             log(f"\nCompleted Download of song with index {index.get()}!")
-                            log(f"Saved to file {re.search("(?<=\[ExtractAudio\] Destination: ).+\.opus", output).group()}")
+                            log(f"Saved to file {re.search("(?<=\[ExtractAudio\] Destination: ).+\.(opus|mp3)", output).group()}")
                             log(f"Timestamp: {datetime.datetime.now()}")
                             log("------------------------------------------")
                             log(f"Number of current errors: {len(errors)}.")
