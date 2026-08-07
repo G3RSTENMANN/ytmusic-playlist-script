@@ -1,16 +1,29 @@
 from ytmusicapi import YTMusic
 import re, sys, os, datetime, subprocess, time, shutil
+from functools import reduce
 
-## -- top-level paths
+## small helper function
+def fold_batch():
+    res = ""
+    for x in BATCH:
+        res += x
+    return res
+
+## -- top-level paths & vars
 BACKUP_LOCATION_PATH = "/media/luca/media/music/ytmusic-backups/"
 #BACKUP_LOCATION_PATH = "/home/luca/srv/ripping/lehramt-gang/"
 SCRIPT_PATH = "/home/luca/srv/ripping/ytmusic-playlist-script/"
 JS_RUNTIME = "deno:/home/luca/.deno/bin/deno"
 LINKS_FILE_NAME = "links.txt"
 
-TARGET_DIR = f"{BACKUP_LOCATION_PATH}backup-{datetime.datetime.now().date()}/"
-# TARGET_DIR = f"{BACKUP_LOCATION_PATH}unsorted/bomba/"
+EMBED_METADATA = True
+BATCH = ["TEST"]
+
+TARGET_DIR = f"{BACKUP_LOCATION_PATH}backup-{datetime.datetime.now().date()}-batch{'all' if 0 in BATCH else reduce(lambda a,b: a+f"{b}", BATCH, "")}/"
+# TARGET_DIR = f"{BACKUP_LOCATION_PATH}unsorted/xyz/"
 LOG_OUTPUT_PATH = f"{TARGET_DIR}log.txt"
+
+AUDIO_QUALITY = "best" # must be either "best" or "mp3"
 
 ## functions & classes
 def log(txt):
@@ -56,17 +69,21 @@ class Idx:
     
     def get(self):
         return f"{self.w}{self.x}{self.y}{self.z}"
-    
 
 
 ## prepare initial directories
 # ----------------------------
 
+# -- check that BATCH is nonempty
+if (len(BATCH) == 0):
+    print("Fatal: Please set BATCH to an acceptable value!")
+    sys.exit()
+
 # -- clear playlists directory
 shutil.rmtree(f"{SCRIPT_PATH}playlists")
 os.mkdir(f"{SCRIPT_PATH}playlists")
 
-# -- prepare target directory
+# -- prepare target directory (log will be available after this)
 try:
     os.mkdir(TARGET_DIR)
 except:
@@ -80,7 +97,7 @@ except:
         print("exiting...")
         sys.exit()
 
-
+# -- keep the time
 time_start = datetime.datetime.now()
 
 
@@ -94,11 +111,31 @@ yt = YTMusic()
 total_fails = 0
 failed_songs = []
 
+# -- batch logic
+do_batch = True
+
 # -- get links for all playlists
 with open(f"{BACKUP_LOCATION_PATH}{LINKS_FILE_NAME}", "r") as links: # parse link file
     for l in links:
+
+        # check for batch
+        if (re.search("^### ", l)):
+            if (re.search("^### Batch TEST", l)):
+                do_batch = "TEST" in BATCH
+            elif (re.search("^### Batch ", l)):
+                batch_number = int((l.strip())[-1])
+                do_batch = 0 in BATCH or batch_number in BATCH
+            continue
+
+        # maybe skip link
+        if not do_batch:
+            continue
+
         # extract playlist ids
-        re_pl_id = re.search("(?<=list=).+", l)
+        re_pl_id = re.search("(?<=list=).+(?= # )", l)
+        if not re_pl_id:
+            log("Something went wrong when reading the link! Skipping it...")
+            continue
         pl_id = re_pl_id.group()
         fails = 0
 
@@ -176,8 +213,7 @@ for filename in files:
                     # 1. download audio-only in the best available quality
                     # 2. convert download with ffmpeg to audio file with the best audio format and quality
                     
-                    ytdlp_command = f'yt-dlp --js-runtimes "{JS_RUNTIME}" -f "ba" --extract-audio --audio-format best --audio-quality 0 -o "{TARGET_DIR}/{pl_name}/{index.get()} - %(title)s.%(ext)s" "{song}"'
-                    #ytdlp_command = f'yt-dlp --js-runtimes "{JS_RUNTIME}" -f "ba" --extract-audio --audio-format mp3 --audio-quality 0 -o "{TARGET_DIR}/{pl_name}/%(title)s.%(ext)s" "{song}"'
+                    ytdlp_command = f'yt-dlp --js-runtimes "{JS_RUNTIME}" -f "ba" {"--embed-metadata --embed-thumbnail " if EMBED_METADATA else ""}--extract-audio --audio-format {AUDIO_QUALITY} --audio-quality 0 -o "{TARGET_DIR}/{pl_name}/{index.get()} - %(title)s.%(ext)s" "{song}"'
                     output = ""
                     try:
                         result = subprocess.run(ytdlp_command, check=True, shell=True, capture_output=True)
