@@ -2,13 +2,6 @@ from ytmusicapi import YTMusic
 import re, sys, os, datetime, subprocess, time, shutil
 from functools import reduce
 
-## small helper function
-def fold_batch():
-    res = ""
-    for x in BATCH:
-        res += x
-    return res
-
 ## -- top-level paths & vars
 BACKUP_LOCATION_PATH = "/media/luca/media/music/ytmusic-backups/"
 #BACKUP_LOCATION_PATH = "/home/luca/srv/ripping/lehramt-gang/"
@@ -19,7 +12,13 @@ LINKS_FILE_NAME = "links.txt"
 SONG_DELAY = 3  # time to wait before the download of the next song
 EMBED_METADATA = False
 EMBED_THUMBNAIL = True
-BATCH = ["TEST"]  # decide which batches are to be downloaded; 0 is equivalent to all batches
+
+# decide which batches are to be downloaded; 0 is equivalent to all batches
+# BATCH = ["TEST"]  
+# BATCH = [0]
+BATCH = [1,2,3] # -- ca. 1000 songs <=> ca. 5h?
+# BATCH = [4,6,7] # -- ca. 840 songs <=> ca. 4.5h?
+# BATCH = [8,9,10] # -- ca. 950 songs <=> ca. 5h?
 
 TARGET_DIR = f"{BACKUP_LOCATION_PATH}backup-{datetime.datetime.now().date()}-batch{'all' if 0 in BATCH else reduce(lambda a,b: a+f"{b}", BATCH, "")}/"
 # TARGET_DIR = f"{BACKUP_LOCATION_PATH}unsorted/xyz/"

@@ -1,13 +1,13 @@
 import os, sys, shutil, re
 
+# -- you have to set these!
 BACKUP_LOCATION_PATH = "/media/luca/media/music/ytmusic-backups/"
-SCRIPT_PATH = "/home/luca/srv/ripping/ytmusic/"
-LINKS_FILE_NAME = "links.txt"
+FOLDER_NAME = "backup-2026-06-09"
+LIBRARY_THUMBNAIL_FILE = "../library.jpg"
 
 COVERS_DIR = f"{BACKUP_LOCATION_PATH}covers/playlists/"
-LIBRARY_LOGO_PATH = f"{COVERS_DIR}../library.jpg"
-TARGET_DIR = f"{BACKUP_LOCATION_PATH}backup-2026-06-09/"
-LOG_OUTPUT_PATH = f"{TARGET_DIR}log.txt"
+TARGET_DIR = f"{BACKUP_LOCATION_PATH}{FOLDER_NAME}/"
+LIBRARY_LOGO_PATH = f"{COVERS_DIR}{LIBRARY_THUMBNAIL_FILE}"
 
 shutil.copyfile(LIBRARY_LOGO_PATH, TARGET_DIR + "cover.jpg")
 
