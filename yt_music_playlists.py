@@ -16,8 +16,10 @@ SCRIPT_PATH = "/home/luca/srv/ripping/ytmusic-playlist-script/"
 JS_RUNTIME = "deno:/home/luca/.deno/bin/deno"
 LINKS_FILE_NAME = "links.txt"
 
-EMBED_METADATA = True
-BATCH = ["TEST"]
+SONG_DELAY = 3  # time to wait before the download of the next song
+EMBED_METADATA = False
+EMBED_THUMBNAIL = True
+BATCH = ["TEST"]  # decide which batches are to be downloaded; 0 is equivalent to all batches
 
 TARGET_DIR = f"{BACKUP_LOCATION_PATH}backup-{datetime.datetime.now().date()}-batch{'all' if 0 in BATCH else reduce(lambda a,b: a+f"{b}", BATCH, "")}/"
 # TARGET_DIR = f"{BACKUP_LOCATION_PATH}unsorted/xyz/"
@@ -213,7 +215,7 @@ for filename in files:
                     # 1. download audio-only in the best available quality
                     # 2. convert download with ffmpeg to audio file with the best audio format and quality
                     
-                    ytdlp_command = f'yt-dlp --js-runtimes "{JS_RUNTIME}" -f "ba" {"--embed-metadata --embed-thumbnail " if EMBED_METADATA else ""}--extract-audio --audio-format {AUDIO_QUALITY} --audio-quality 0 -o "{TARGET_DIR}/{pl_name}/{index.get()} - %(title)s.%(ext)s" "{song}"'
+                    ytdlp_command = f'yt-dlp --js-runtimes "{JS_RUNTIME}" -f "ba" {"--embed-metadata " if EMBED_METADATA else ""}{"--embed-thumbnail " if EMBED_THUMBNAIL else ""}--extract-audio --audio-format {AUDIO_QUALITY} --audio-quality 0 -o "{TARGET_DIR}/{pl_name}/{index.get()} - %(title)s.%(ext)s" "{song}"'
                     output = ""
                     try:
                         result = subprocess.run(ytdlp_command, check=True, shell=True, capture_output=True)
@@ -241,8 +243,8 @@ for filename in files:
                 
                 retries += 1
 
-            log("Continuing with the next song in 3 seconds...")
-            time.sleep(3)
+            log(f"Continuing with the next song in {SONG_DELAY} seconds...")
+            time.sleep(SONG_DELAY)
             index.inc()
 
 log("\n-------------------------------------------------------\n")
